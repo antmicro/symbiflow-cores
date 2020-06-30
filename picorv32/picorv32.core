@@ -1,0 +1,128 @@
+CAPI=2:
+name : :symbiflow:picorv32:0-r1
+
+filesets:
+  rtl:
+    files: 
+      - picorv32.v
+      - rtl/picorv32_wrap.v
+    file_type : verilogSource
+  tb:
+    files: [testbench.v]
+    file_type : verilogSource
+    depend:
+  tb_ez:
+    files: [testbench_ez.v]
+    file_type : verilogSource
+  tb_wb:
+    files: [testbench_wb.v]
+    file_type : verilogSource
+  tb_verilator:
+    files:
+      - testbench.cc : {file_type : cppSource}
+  arty_xilinx:
+    files:
+      - constr/arty.xdc : {file_type : xdc}
+  arty_symbiflow:
+    files:
+      - constr/arty.pcf : {file_type : PCF}
+  zybo_xilinx:
+    files:
+      - constr/zybo.xdc : {file_type : xdc}
+  zybo_symbiflow:
+    files:
+      - constr/zybo.pcf : {file_type : PCF}
+
+targets:
+  default:
+    filesets: [rtl]
+  lint:
+    filesets: [rtl]
+    default_tool : verilator
+    tools:
+      verilator:
+        mode : lint-only
+    toplevel : [picorv32_axi]
+  test:
+    default_tool: icarus
+    filesets: [rtl, tb, "tool_verilator? (tb_verilator)"]
+    parameters: [COMPRESSED_ISA, axi_test, firmware, noerror, trace, vcd, verbose]
+    toplevel:
+      - "tool_verilator?  (picorv32_wrapper)"
+      - "!tool_verilator? (testbench)"
+      
+    tools:
+      verilator :
+        cli_parser : fusesoc
+        mode : cc
+        verilator_options : [-Wno-fatal, --trace]
+  test_ez:
+    default_tool: icarus
+    filesets: [rtl, tb_ez]
+    parameters: [vcd]
+    toplevel: [testbench]
+  test_wb:
+    default_tool: icarus
+    filesets: [rtl, tb_wb]
+    parameters: [COMPRESSED_ISA, firmware, noerror, trace, vcd]
+    toplevel: [testbench]
+  arty:
+    filesets:
+      - rtl
+      - "tool_vivado? (arty_xilinx)"
+      - "tool_symbiflow? (arty_symbiflow)"
+    tools:
+      vivado:
+        part: xc7a35tcsg324-1
+      symbiflow:
+        package: csg324-1
+        part: xc7a35t
+        pnr: vpr
+        vendor: xilinx
+    toplevel : [top]
+    default_tool: vivado
+  zybo:
+    filesets:
+      - rtl
+      - "tool_vivado? (zybo_xilinx)"
+      - "tool_symbiflow? (zybo_symbiflow)"
+    tools:
+      vivado:
+        part: xc7z010clg400-1
+      symbiflow:
+        package: clg400-1
+        part: xc7z010
+        pnr: vpr
+        vendor: xilinx
+    toplevel : [top]
+    default_tool: vivado
+  
+
+parameters:
+  COMPRESSED_ISA:
+    datatype  : str
+    default   : 1
+    paramtype : vlogdefine
+  axi_test:
+    datatype  :  bool
+    paramtype : plusarg
+  firmware:
+    datatype  :  file
+    paramtype : plusarg
+  noerror:
+    datatype  :  bool
+    paramtype : plusarg
+  trace:
+    datatype  : bool
+    paramtype : plusarg
+  vcd:
+    datatype  : bool
+    paramtype : plusarg
+  verbose:
+    datatype : bool
+    paramtype : plusarg
+
+provider:
+  name    : github
+  user    : cliffordwolf
+  repo    : picorv32
