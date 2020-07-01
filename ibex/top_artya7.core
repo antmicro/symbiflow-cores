@@ -1,0 +1,82 @@
+CAPI=2:
+# Copyright lowRISC contributors.
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+name: "lowrisc:symbiflow:top_artya7:0.1"
+description: "Ibex example toplevel for Arty A7 boards (both, -35 and -100)"
+filesets:
+  files_rtl_artya7:
+    depend:
+      - lowrisc:ibex:ibex_core
+      - lowrisc:ibex:fpga_xilinx_shared
+    files:
+      - examples/fpga/artya7/rtl/top_artya7.sv
+    file_type: systemVerilogSource
+  data:
+    files:
+      - data/led.vmem
+  arty_xilinx:
+    files:
+      - constr/arty-vivado.xdc
+    file_type: xdc
+  arty_symbiflow:
+    files:
+      - constr/arty.pcf : {filetype: PCF}
+      - constr/arty.sdc : {filetype: SDC}
+      - constr/arty-vpr.xdc : {filetype: xdc}
+
+parameters:
+  # XXX: This parameter needs to be absolute, or relative to the *.runs/synth_1
+  # directory. It's best to pass it as absolute path when invoking fusesoc, e.g.
+  # --SRAM_INIT_FILE=$PWD/sw/led/led.vmem
+  # XXX: The VMEM file should be added to the sources of the Vivado project to
+  # make the Vivado dependency tracking work. However this requires changes to
+  # fusesoc first.
+  SRAM_INIT_FILE:
+    datatype: str
+    description: SRAM initialization file in vmem hex format
+    default: "data/led.vmem"
+    paramtype: vlogdefine
+
+  FPGA_XILINX:
+    datatype: str
+    description: Identifies Xilinx FPGA targets to set DSP pragmas for performance counters.
+    default: 1
+    paramtype: vlogdefine
+
+targets:
+  synth:
+    default_tool: vivado
+    filesets:
+      - files_rtl_artya7
+    toplevel: top_artya7
+    parameters:
+      - SRAM_INIT_FILE
+      - FPGA_XILINX
+    tools:
+      vivado:
+        part: "xc7a35ticsg324-1L"  # Default to Arty A7-35
+  arty:
+    filesets:
+      - files_rtl_artya7
+      - data
+      - "tool_vivado? (arty_xilinx)"
+      - "tool_symbiflow? (arty_symbiflow)"
+    parameters:
+      - SRAM_INIT_FILE
+      - FPGA_XILINX
+    tools:
+      vivado:
+        part: xc7a35tcsg324-1
+      symbiflow:
+        package: csg324-1
+        part: xc7a35t
+        pnr: vpr
+        vendor: xilinx
+    toplevel: top_artya7
+    default_tool: vivado
+
+provider:
+  name    : github
+  user    : lowRISC
+  repo    : ibex
