@@ -1,0 +1,40 @@
+CAPI=2:
+
+name : :symbiflow:picosoc-simpleuart
+
+filesets:
+  picosoc_simpleuart:
+    files:
+      - rtl/picosoc_simpleuart_wrap.v
+      - picosoc/simpleuart.v
+    file_type : verilogSource
+  basys3_xilinx:
+    files:
+      - constr/basys3.xdc : {file_type : xdc}
+  basys3_symbiflow:
+    files:
+      - constr/basys3.pcf : {file_type : PCF}
+
+targets:
+  default:
+    filesets : [picosoc_simpleuart]
+  basys3:
+    filesets:
+      - picosoc_simpleuart
+      - "tool_vivado? (basys3_xilinx)"
+      - "tool_symbiflow? (basys3_symbiflow)"
+    tools:
+      vivado:
+        part: xc7a35tcpg236-1
+      symbiflow:
+        package: cpg236-1
+        part: xc7a35t
+        pnr: vpr
+        vendor: xilinx
+    toplevel : [top]
+    default_tool: vivado
+
+provider:
+  name    : github
+  user    : cliffordwolf
+  repo    : picorv32
