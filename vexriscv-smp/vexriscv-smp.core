@@ -1,0 +1,38 @@
+CAPI=2:
+name : :symbiflow:vexriscv-smp
+
+filesets:
+  rtl:
+    files:
+      - verilog/VexRiscvLitexSmpCluster_4c.v
+      - verilog/RamXilinx.v
+      - rtl/top.v
+    file_type : verilogSource
+  data:
+    files:
+      - verilog/VexRiscvLitexSmpCluster_4c.v_toplevel_cluster_cpus_0_core_RegFilePlugin_regFile.bin
+      - verilog/VexRiscvLitexSmpCluster_4c.v_toplevel_cluster_cpus_1_core_RegFilePlugin_regFile.bin
+      - verilog/VexRiscvLitexSmpCluster_4c.v_toplevel_cluster_cpus_2_core_RegFilePlugin_regFile.bin
+      - verilog/VexRiscvLitexSmpCluster_4c.v_toplevel_cluster_cpus_3_core_RegFilePlugin_regFile.bin
+  arty_xilinx:
+    files:
+      - constr/arty.xdc : {file_type : xdc}
+
+targets:
+  default:
+    filesets : [rtl]
+  arty:
+    filesets:
+      - rtl
+      - data
+      - "tool_vivado? (arty_xilinx)"
+    tools:
+      vivado:
+        part: xc7a35tcsg324-1
+    toplevel : [top]
+    default_tool: vivado
+
+provider:
+  name    : github
+  user    : enjoy-digital
+  repo    : litex_vexriscv_smp
